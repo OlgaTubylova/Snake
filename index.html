@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+
+</head>
+
+<body>
+    <h1>Snake</h1>
+    <div id="gameWindow" style="
+    border: 1px gray solid; 
+    font-family: monospace; 
+    width: fit-content;
+    font-size: 15px;
+    line-height: 18px;
+    letter-spacing: 9px;
+    "></div>
+</body>
+
+
+<script defer>
+    const gameWindow = document.getElementById("gameWindow");
+
+    let snake = [
+        { x: 5, y: 8 },
+        { x: 5, y: 9 },
+        { x: 5, y: 10 },
+    ]
+
+    const x = 15;
+    const y = 15;
+
+    let food = { x: 5, y: 2 };
+
+    const LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3;
+
+    let direction = LEFT;
+    let gameOver = false;
+
+
+    function newHeadPosition(direction) {
+        if (direction === LEFT) {
+            return {
+                x: snake[0]["x"],
+                y: snake[0]["y"] > 0 ? snake[0]["y"] - 1 : y - 1
+            }
+        }
+
+        if (direction === RIGHT) {
+            return {
+                x: snake[0]["x"],
+                y: (snake[0]["y"] + 1) % y
+            }
+        }
+
+        if (direction === UP) {
+            return {
+                x: (snake[0]["x"] > 0) ? snake[0]["x"] - 1 : x - 1,
+                y: snake[0]["y"]
+            }
+
+        }
+
+        if (direction === DOWN) {
+            return {
+                x: (snake[0]["x"] + 1) % x,
+                y: snake[0]["y"]
+            }
+        }
+    }
+
+    function updateState() {
+        const newHead = newHeadPosition(direction)
+
+        if (newHead.x == food["x"] && newHead.y == food["y"]) {
+            food = {
+                x: Math.floor(Math.random() * x),
+                y: Math.floor(Math.random() * y)
+            }
+
+            while (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+                food = {
+                    x: Math.floor(Math.random() * x),
+                    y: Math.floor(Math.random() * y)
+                }
+            }
+        } else {
+            snake.pop()
+        }
+
+        if (snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+            alert("Snake bit itself!")
+            gameOver = true
+        }
+
+        snake = [newHead, ...snake]
+    }
+
+    function render() {
+        let rendered = ""
+        for (let i = 0; i < x; i++) {
+            for (let j = 0; j < y; j++) {
+                if (food.x === i && food.y === j) {
+                    rendered += "@"
+                } else if (snake.some(segment => segment.x === i && segment.y === j)) {
+                    rendered += "*"
+                } else {
+                    rendered += "&nbsp;"
+                }
+            }
+            rendered += "<br>"
+        }
+
+        gameWindow.innerHTML = rendered
+    }
+
+    function arePointsEqual(point1, point2) {
+        return point1.x === point2.x && point1.y === point2.y
+    }
+
+    window.onkeydown = (e) => {
+        const directionByKey = {
+            "ArrowLeft": LEFT,
+            "ArrowRight": RIGHT,
+            "ArrowUp": UP,
+            "ArrowDown": DOWN,
+        }
+
+        const newDirection = directionByKey[e.key]
+        const nextHead = newHeadPosition(newDirection)
+
+        // Prevent snake from going in the opposite direction
+        if (!arePointsEqual(nextHead, snake[1])) {
+            direction = newDirection
+        }
+    }
+
+    render()
+    setInterval(() => {
+        if (!gameOver) {
+            updateState()
+            render()
+        }
+    }, 500);
+</script>
+
+</html>

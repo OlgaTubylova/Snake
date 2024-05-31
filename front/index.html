@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake</title>
+
+</head>
+
+<body>
+    <h1>Snake</h1>
+    <div id="gameWindow" style="
+    border: 1px gray solid; 
+    font-family: monospace; 
+    width: fit-content;
+    font-size: 15px;
+    line-height: 18px;
+    letter-spacing: 9px;
+    "></div>
+</body>
+
+<script type="module">
+    import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
+
+    function handleKeyPress(key, userId) {
+        let direction
+        switch (key) {
+            case "ArrowUp":
+                direction = "UP"
+                break
+            case "ArrowDown":
+                direction = "DOWN"
+                break
+            case "ArrowLeft":
+                direction = "LEFT"
+                break
+            case "ArrowRight":
+                direction = "RIGHT"
+                break
+            default:
+                return
+        }
+
+        fetch(`/changeDirection/${direction}/${userId}`, { method: "POST" });
+    }
+
+    async function fetchState() {
+        const response = await fetch("/state")
+        return await response.json()
+    }
+
+    async function joinTheGame() {
+        const userId = uuidv4();
+        const gameWindow = document.getElementById("gameWindow");
+
+        const response = await fetch(`/join/${userId}/`, { method: "POST" });
+        const initialState = await response.json()
+
+        gameWindow.innerHTML = render(initialState)
+
+        window.onkeydown = (e) => {
+            handleKeyPress(e.key, userId)
+        };
+
+        setInterval(async () => {
+            const state = await fetchState()
+            gameWindow.innerHTML = render(state)
+        }, 100);
+    }
+
+    function render(state) {
+        let rendered = ""
+
+        for (let i = 0; i < state.x; i++) {
+            for (let j = 0; j < state.y; j++) {
+                let snakeSymbol = ""
+                for (const snake of state.snakes) {
+                    if (snake.segments.some(segment => segment.x === i && segment.y === j)) {
+                        snakeSymbol = snake.symbol
+                    }
+                }
+
+                if (state.food.x === i && state.food.y === j) {
+                    rendered += "@"
+                } else if (snakeSymbol) {
+                    rendered += snakeSymbol
+                } else {
+                    rendered += "&nbsp;"
+                }
+            }
+
+            rendered += "<br>"
+        }
+
+        return rendered
+    }
+
+    joinTheGame()
+</script>
+
+</html>

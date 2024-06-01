@@ -8,6 +8,11 @@ const port = 3000;
 
 const server = createServer((req, res) => {
     const { url, method } = req;
+
+    if (url !== "/state") {
+        console.log(method, url);
+    }
+
     if (url === "/state" && method === "GET") {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -32,8 +37,6 @@ const server = createServer((req, res) => {
         const userId = params[2]
 
         joinTheGame(userId)
-        console.log("join/userId:", userId)
-
         res.statusCode = 200
         res.end(JSON.stringify(getCurrentState()));
         return
